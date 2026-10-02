@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ALIBI — Everyone has an alibi. Everyone has a secret.</title>
+<style>
+:root{--bg:#0d0d0f;--panel:#17171b;--paper:#eadfca;--ink:#17120e;--red:#a62929;--gold:#c79a52;--muted:#aaa;--green:#417b5a}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top,#29221b,#0d0d0f 45%);color:#f5f1e8;font-family:Georgia,serif;min-height:100vh}
+main{max-width:900px;margin:auto;padding:24px}.screen{display:none}.screen.active{display:block}
+.hero{text-align:center;padding:42px 10px}.logo{font:900 clamp(58px,13vw,110px)/.85 Arial,sans-serif;letter-spacing:-6px}.logo span{color:#b52b2b}.tag{font-size:clamp(18px,3vw,28px);font-style:italic;margin:18px}
+.card{background:var(--paper);color:var(--ink);border-radius:12px;padding:22px;margin:14px 0;box-shadow:0 12px 28px #0008;border:1px solid #806c51}
+.dark{background:#17171bd9;color:#eee;border:1px solid #444}.stamp{display:inline-block;border:3px solid var(--red);color:var(--red);padding:5px 10px;transform:rotate(-3deg);font:bold 14px Arial;text-transform:uppercase}
+button,input{font:inherit}button{border:0;border-radius:8px;padding:13px 18px;cursor:pointer;font-weight:bold;margin:5px;background:var(--red);color:white;min-height:44px}button.secondary{background:#3b3b42}button.gold{background:#8b6732}button:disabled{opacity:.45;cursor:not-allowed}
+input{width:100%;padding:12px;border-radius:7px;border:1px solid #999;margin:5px 0 10px;font-size:16px}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:160px}
+h1,h2,h3{margin-top:8px}.center{text-align:center}.muted{color:#bbb}.paper-title{font-family:Arial,sans-serif;text-transform:uppercase;letter-spacing:2px}.secret{border-left:6px solid var(--red)}.clue{border-left:6px solid #416b85}.objective{border-left:6px solid #8a6b2f}.role{border-left:6px solid #222}
+.badge{display:inline-block;padding:5px 9px;border-radius:99px;background:#333;font:12px Arial;margin:3px}.status{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}.stat{background:#222;padding:10px;border-radius:8px;text-align:center}
+.event{border:1px dashed var(--gold);padding:14px;border-radius:8px;margin:12px 0}.big{font-size:1.25rem}.reveal{animation:pop .35s ease}@keyframes pop{from{transform:scale(.95);opacity:.3}to{transform:scale(1);opacity:1}}
+hr{border:0;border-top:1px solid #555;margin:20px 0}.small{font-size:.9rem}
+@media(max-width:500px){main{padding:14px}.logo{letter-spacing:-3px}.card{padding:16px}}
+</style>
+</head>
+<body><main>
+<section id="home" class="screen active hero">
+  <div class="stamp">Confidential</div>
+  <div class="logo">ALI<span>B</span>I</div>
+  <div class="tag">Everyone has an alibi. Everyone has a secret.</div>
+  <p class="muted">A pass-the-phone game of bluffing, secrets & deduction for 2–8 players.</p>
+  <button id="startBtn">OPEN THE CASE</button>
+  <button id="rulesBtn" class="secondary">HOW TO PLAY</button>
+</section>
+
+<section id="rules" class="screen">
+ <div class="card"><h2>How to Play</h2>
+ <p><b>1.</b> A crime is revealed. Each player secretly receives a role, secret, clue and personal objective.</p>
+ <p><b>2.</b> Take turns interrogating one another. You may tell the truth, lie, use half-truths, or redirect suspicion.</p>
+ <p><b>3.</b> Each player gets <b>2 CALL BLUFF tokens</b>. Challenge a factual claim when you think someone is lying. A correct challenge earns Evidence; a bad challenge rewards the accused.</p>
+ <p><b>4.</b> New evidence appears as rounds pass. After the interrogation, everyone secretly votes.</p>
+ <p><b>5.</b> Catch the culprit to win as an investigator. The culprit wins by escaping the final vote. Secret objectives earn bragging-right bonus points.</p>
+ <p><b>Important:</b> innocent players have secrets and objectives too. A lie does not automatically mean guilt.</p>
+ <button data-go="home" class="secondary">BACK</button></div>
+</section>
+
+<section id="setup" class="screen">
+ <h2>Case Setup</h2>
+ <div class="card dark"><label>Number of players (2–8)</label>
+ <input id="count" type="number" min="2" max="8" value="4">
+ <div id="names"></div>
+ <button id="buildNames" class="secondary">UPDATE PLAYERS</button>
+ <button id="beginBtn">BEGIN CASE</button></div>
+</section>
+
+<section id="case" class="screen center">
+ <div class="card"><span class="stamp">Case File</span><h1 id="caseTitle"></h1><p id="caseText" class="big"></p></div>
+ <button id="dealBtn">DEAL SECRET FILES</button>
+</section>
+
+<section id="pass" class="screen center">
+ <h2 id="passTitle"></h2><p>Make sure nobody else can see the screen.</p>
+ <button id="revealBtn">REVEAL MY FILE</button>
+</section>
+
+<section id="private" class="screen">
+ <h2 id="privateName"></h2>
+ <div class="card role"><h3>ROLE</h3><p id="roleText"></p></div>
+ <div class="card secret"><h3>SECRET</h3><p id="secretText"></p></div>
+ <div class="card clue"><h3>CLUE</h3><p id="clueText"></p></div>
+ <div class="card objective"><h3>SECRET OBJECTIVE</h3><p id="objectiveText"></p></div>
+ <div class="center"><button id="hideBtn">HIDE & PASS PHONE</button></div>
+</section>
+
+<section id="table" class="screen">
+ <div class="status">
+  <div class="stat">ROUND<br><b id="roundNum">1</b>/5</div>
+  <div class="stat">INTERROGATOR<br><b id="interrogator"></b></div>
+  <div class="stat">CASE<br><b id="tableCase"></b></div>
+ </div>
+ <div class="card dark">
+  <h2>Interrogation</h2>
+  <p id="prompt" class="big"></p>
+  <div id="questions"></div>
+  <hr>
+  <p><b>Table rule:</b> Players answer out loud. Bluffing is allowed. When someone challenges a factual statement, tap CALL BLUFF and resolve it honestly between the involved players without showing unrelated secrets.</p>
+  <button id="bluffBtn">📣 CALL BLUFF</button>
+  <button id="nextTurn" class="gold">NEXT TURN</button>
+ </div>
+ <div id="eventBox" class="event" hidden></div>
+</section>
+
+<section id="votePass" class="screen center">
+ <h2 id="votePassTitle"></h2><p>Pass the phone. Your accusation is secret.</p>
+ <button id="voteReveal">VOTE</button>
+</section>
+
+<section id="vote" class="screen center">
+ <h2 id="voterName"></h2><p>Who committed the crime?</p><div id="voteButtons"></div>
+</section>
+
+<section id="results" class="screen center">
+ <div class="card reveal"><span class="stamp">Case Closed?</span><h2>THE VOTES ARE IN</h2><p id="voteResult" class="big"></p><hr><h2>BUT THE CULPRIT WAS…</h2><h1 id="culpritResult"></h1><p id="winnerText"></p></div>
+ <div id="roleReveal"></div>
+ <button id="againBtn">PLAY ANOTHER CASE</button>
+</section>
+</main>
+<script>
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+const screens=$$('.screen'); function show(id){screens.forEach(x=>x.classList.remove('active')); $('#'+id).classList.add('active');scrollTo(0,0)}
+const scenarios=[
+ ["THE MISSING DIAMOND","A priceless diamond vanished during a private party. Everyone had access. Nobody has a clean story."],
+ ["THE VANISHED ENVELOPE","An envelope containing $50,000 disappeared from a locked office during a ten-minute window."],
+ ["THE WEDDING DISASTER","Minutes before the ceremony, an irreplaceable wedding item disappeared from the bridal suite."],
+ ["THE OFFICE SABOTAGE","The team's most important presentation was deliberately corrupted just before the client meeting."],
+ ["THE MISSING WILL","During a tense family dinner, a newly signed will vanished from the study."],
+ ["THE HOTEL ROOM","A valuable item disappeared from a hotel suite while every guest insists they were somewhere else."]
+];
+const secrets=[
+ "You were somewhere you had no business being, but you were not stealing anything.",
+ "You secretly searched another player's belongings earlier.",
+ "You lied about when you arrived because the real reason is embarrassing.",
+ "You overheard an argument and promised not to tell anyone.",
+ "You borrowed something without permission and quietly returned it.",
+ "You were texting someone you absolutely do not want the group to know about.",
+ "You found a suspicious object and moved it before anyone else saw it.",
+ "You owe another player a favor and do not want to explain why.",
+ "You deleted a message that could make you look suspicious.",
+ "You recognized an important clue immediately but pretended not to."
+];
+const objectives=[
+ "Get at least two people to accuse you, even if you are innocent.",
+ "Tell at least two convincing lies without being successfully challenged.",
+ "Never tell a direct lie; survive using careful wording and omissions.",
+ "Convince at least one player that the person to your left is innocent.",
+ "Successfully catch one lie with CALL BLUFF.",
+ "Make another player repeat or support one of your claims.",
+ "Keep your Secret hidden until the final reveal.",
+ "Publicly defend someone who later receives an accusation.",
+ "Change your story once and convince the group the second version is true.",
+ "Get someone to CALL BLUFF on a statement that was actually true."
+];
+const clues=[
+ "You noticed someone leave the main room during the critical time.",
+ "You saw an object change locations, but you did not see who moved it.",
+ "You heard footsteps near the scene shortly before the discovery.",
+ "One player's timeline does not match the clock you remember seeing.",
+ "You saw someone acting nervous after the item was discovered missing.",
+ "You know at least one person has lied about where they were.",
+ "You found evidence that suggests the culprit had only a short window.",
+ "You heard someone mention the missing item before the group knew it was gone.",
+ "You saw two people together during part of the critical time.",
+ "You remember the area being briefly unattended."
+];
+const events=[
+ ["SECURITY FOOTAGE","Everyone must state where they were during the critical five-minute window."],
+ ["ANONYMOUS TIP","The interrogator may ask any one player an extra question."],
+ ["POWER OUTAGE","One previously discussed timeline detail is now considered unreliable."],
+ ["NEW WITNESS","Every player must name the person they currently trust most."],
+ ["DESTROYED EVIDENCE","Each player must say which existing clue they trust least."]
+];
+const qs=["Where were you during the critical time?","Who can confirm your story?","What is the most suspicious thing you noticed?","Who do you trust least right now?","Did you have access to the missing item?","What detail in someone else's story does not make sense?"];
+let players=[], data=[], scenario, dealIndex=0, turn=0, round=1, voteIndex=0, votes={};
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function makeNames(){let n=Math.max(2,Math.min(8,+$('#count').value||4));$('#count').value=n;let old=[...$('#names').querySelectorAll('input')].map(x=>x.value);$('#names').innerHTML='';for(let i=0;i<n;i++){let x=document.createElement('input');x.placeholder='Player '+(i+1);x.value=old[i]||'';$('#names').append(x)}}
+$('#startBtn').onclick=()=>{show('setup');makeNames()};$('#rulesBtn').onclick=()=>show('rules');$$('[data-go]').forEach(b=>b.onclick=()=>show(b.dataset.go));$('#buildNames').onclick=makeNames;
+$('#beginBtn').onclick=()=>{players=[...$('#names').querySelectorAll('input')].map((x,i)=>x.value.trim()||'Player '+(i+1));scenario=scenarios[Math.floor(Math.random()*scenarios.length)];$('#caseTitle').textContent=scenario[0];$('#caseText').textContent=scenario[1];show('case')};
+$('#dealBtn').onclick=()=>{let culprit=Math.floor(Math.random()*players.length);let ss=shuffle(secrets),oo=shuffle(objectives),cc=shuffle(clues);data=players.map((p,i)=>({name:p,role:i===culprit?'CULPRIT':'INVESTIGATOR',secret:ss[i%ss.length],objective:oo[i%oo.length],clue:cc[i%cc.length],culprit:i===culprit}));dealIndex=0;passDeal()};
+function passDeal(){if(dealIndex>=players.length){startTable();return}$('#passTitle').textContent='PASS THE PHONE TO '+players[dealIndex].toUpperCase();show('pass')}
+$('#revealBtn').onclick=()=>{let d=data[dealIndex];$('#privateName').textContent=d.name+"'s Confidential File";$('#roleText').textContent=d.role+(d.culprit?" — Avoid receiving the most final votes. Lie strategically; your secret does not have to explain the crime.":" — Identify the culprit without exposing more of your own secrets than necessary.");$('#secretText').textContent=d.secret;$('#clueText').textContent=d.clue;$('#objectiveText').textContent=d.objective;show('private')};
+$('#hideBtn').onclick=()=>{dealIndex++;passDeal()};
+function startTable(){turn=0;round=1;$('#tableCase').textContent=scenario[0];renderTurn();show('table')}
+function renderTurn(){let who=players[turn%players.length];$('#roundNum').textContent=round;$('#interrogator').textContent=who;$('#prompt').textContent=who+", choose someone to question. Listen closely: a lie may hide guilt—or an innocent secret.";let q=shuffle(qs).slice(0,3);$('#questions').innerHTML='<p><b>Suggested questions</b></p>'+q.map(x=>'<span class="badge">'+x+'</span>').join('');$('#eventBox').hidden=true}
+$('#bluffBtn').onclick=()=>alert("CALL BLUFF! The challenger spends one Bluff token. If the challenged factual statement was false, the challenger earns 1 Evidence. If it was true, the challenged player earns 1 Evidence. Keep unrelated private information hidden.");
+$('#nextTurn').onclick=()=>{turn++;if(turn%players.length===0){round++;if(round===3||round===5){let e=events[Math.floor(Math.random()*events.length)];$('#eventBox').innerHTML='<b>'+e[0]+'</b><br>'+e[1];$('#eventBox').hidden=false}if(round>5){voteIndex=0;votes={};votePass();return}}renderTurn()};
+function votePass(){if(voteIndex>=players.length){finish();return}$('#votePassTitle').textContent='PASS THE PHONE TO '+players[voteIndex].toUpperCase();show('votePass')}
+$('#voteReveal').onclick=()=>{let voter=players[voteIndex];$('#voterName').textContent=voter+"'s Final Accusation";$('#voteButtons').innerHTML='';players.forEach((p,i)=>{if(i!==voteIndex){let b=document.createElement('button');b.textContent=p;b.onclick=()=>{votes[p]=(votes[p]||0)+1;voteIndex++;votePass()};$('#voteButtons').append(b)}});show('vote')};
+function finish(){let entries=Object.entries(votes).sort((a,b)=>b[1]-a[1]);let top=entries.length?entries[0][0]:'No one';let culprit=data.find(x=>x.culprit).name;$('#voteResult').textContent='The group accused '+top+'.';$('#culpritResult').textContent=culprit.toUpperCase();let caught=top===culprit;$('#winnerText').textContent=caught?'The investigators cracked the case.':'The culprit escaped suspicion and wins the case.';$('#roleReveal').innerHTML=data.map(d=>'<div class="card"><b>'+d.name+'</b> — '+d.role+'<br><span class="small">Secret objective: '+d.objective+'</span></div>').join('');show('results')}
+$('#againBtn').onclick=()=>show('setup');
+makeNames();
+</script></body></html>
